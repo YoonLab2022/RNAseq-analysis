@@ -18,7 +18,7 @@
 
 # required software for OSCER
 module load HISAT2
-module load SAMtools
+
 
 # retrieve paired reads absolute path for alignment
 inputsPath="$1"
@@ -70,12 +70,26 @@ for f1 in "$inputsPath"/*pForward.fq.gz; do
 	echo "Processing $curSampleNoPath"
 	#Run hisat2 with default settings
 	hisat2 -p 8 -q -x $buildOut"/"$refNoEx -1 $f1 -2 $curSample"_pReverse.fq.gz" -S $curSampleNoPath"/accepted_hits.sam" --summary-file $curSampleNoPath"/alignedSummary.txt"
+	#Print status message
+	echo "Processed-hisat!"
+done
+module unload HISAT2
+
+module load SAMtools
+for f1 in "$inputsPath"/*pForward.fq.gz; do
+	#Trim extension from current file name
+	curSample=$(echo $f1 | sed 's/.pForward\.fq\.gz//')
+	#Trim file path from current file name
+	curSampleNoPath=$(basename $f1)
+	curSampleNoPath=$(echo $curSampleNoPath | sed 's/.pForward\.fq\.gz//')
+	#Print status message
+	echo "Processing $curSampleNoPath"
 	#Convert output sam files to bam format for downstream analysis
 	samtools view -@ 8 -bS $curSampleNoPath"/accepted_hits.sam" > $curSampleNoPath"/accepted_hits.bam"
 	#Remove the now converted .sam file
 	rm $curSampleNoPath"/accepted_hits.sam"
 	#Print status message
-	echo "Processed!"
+	echo "Processed-samtools!"
 done
 
 #Clean up
